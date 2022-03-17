@@ -507,7 +507,6 @@ GBB.VanillDungeonNames  = {
     "AQ20", "BWL", "AQ40", "NAX",
 }	
 
-
 GBB.PvpNames = {
 	"WSG", "AB", "AV", "EOTS", "ARENA",
 }
@@ -516,6 +515,11 @@ GBB.Misc = {"MISC", "TRADE",}
 
 GBB.DebugNames = {
 	"DEBUG", "BAD", "NIL",
+}
+
+GBB.Heroics = {
+	"RAMPS", "BF", "SH", "SP", "UB", "SV", "MT", "CRYPTS",
+	"SETH", "SL", "OHB", "BM", "MECH", "BOT", "ARC", "MGT",
 }
 
 GBB.Raids = {
@@ -532,6 +536,14 @@ GBB.Seasonal = {
 
 GBB.SeasonalActiveEvents = {}
 GBB.Events = getSeasonalDungeons()
+
+function GBB.GetHeroics()
+	local arr = {}
+	for _, v in pairs (GBB.Heroics) do
+		arr[v] = 1
+	end
+	return arr
+end
 
 function GBB.GetRaids()
 	local arr = {}

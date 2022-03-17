@@ -399,7 +399,7 @@ function GBB.UpdateList()
 	for i,req in pairs(GBB.RequestList) do
 		if type(req) == "table" then
 		
-			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic, req.IsRaid)) and req.last + GBB.DB.TimeOut > time() then
+			if (ownRequestDungeons[req.dungeon]==true or GBB.FilterDungeon(req.dungeon, req.IsHeroic)) and req.last + GBB.DB.TimeOut > time() then
 				
 				count= count + 1
 				
@@ -417,7 +417,7 @@ function GBB.UpdateList()
 						end
 						hi=hi+1
 						
-						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic, req.IsRaid)) then
+						if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], req.IsHeroic)) then
 							yy=CreateHeader(yy,GBB.dungeonSort[hi])
 							cEntrys=0
 						else
@@ -442,7 +442,7 @@ function GBB.UpdateList()
 				yy=yy+ itemHight*(GBB.DB.ShowOnlyNb-cEntrys)
 			end
 			hi=hi+1			
-			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false, false)) then
+			if (ownRequestDungeons[GBB.dungeonSort[hi]]==true or GBB.FilterDungeon(GBB.dungeonSort[hi], false)) then
 				yy=CreateHeader(yy,GBB.dungeonSort[hi])
 				cEntrys=0
 			else 
@@ -685,9 +685,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 						end
 					end
 				end
-
-				local isRaid = GBB.RaidList[dungeon] ~= nil
-
+				
 				if index==0 then 
 					index=#GBB.RequestList +1
 					GBB.RequestList[index]={}
@@ -699,7 +697,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 					GBB.RequestList[index].IsFriend=C_FriendList.IsFriend(guid)
 					GBB.RequestList[index].IsPastPlayer=GBB.GroupTrans[name]~=nil
 					
-					if GBB.FilterDungeon(dungeon, isHeroic, isRaid) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
+					if GBB.FilterDungeon(dungeon, isHeroic) and dungeon~="TRADE" and dungeon~="MISC" and GBB.FoldedDungeons[dungeon]~= true then
 						if dungeonTXT=="" then
 							dungeonTXT=GBB.dungeonNames[dungeon]
 						else
@@ -710,7 +708,7 @@ function GBB.PhraseMessage(msg,name,guid,channel)
 			
 				GBB.RequestList[index].message=msg	
 				GBB.RequestList[index].IsHeroic = isHeroic
-				GBB.RequestList[index].IsRaid = isRaid
+				GBB.RequestList[index].IsRaid = GBB.RaidList[dungeon] ~= nil
 				GBB.RequestList[index].last=requestTime
 				doUpdate=true
 			end

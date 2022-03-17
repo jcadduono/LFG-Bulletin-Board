@@ -124,22 +124,20 @@ function GBB.LevelRange(dungeon,short)
 	return ""
 end
 
+function GBB.InLevelRange(dungeon, isHeroic)
+	-- If the user is within the level range, or if they're max level and it's heroic.
+	return (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 70)
+end
+
 function GBB.SavedToDungeon(dungeon, isHeroic)
 	return GBB.SavedDungeons[dungeon] and ((isHeroic and GBB.SavedDungeons[dungeon].heroic) or (not isHeroic and GBB.SavedDungeons[dungeon].normal))
 end
 
-function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
-	if dungeon == nil then return false end
-	if isHeroic == nil then isHeroic = false end
-	if isRaid == nil then isRaid = false end
-
-	-- If the user is within the level range, or if they're max level and it's heroic.
-	local inLevelRange = (not isHeroic and GBB.dungeonLevel[dungeon][1] <= GBB.UserLevel and GBB.UserLevel <= GBB.dungeonLevel[dungeon][2]) or (isHeroic and GBB.UserLevel == 70)
-	
-	return GBB.DBChar["FilterDungeon"..dungeon] and 
-		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
-		(GBB.DBChar.FilterLevel == false or inLevelRange) and
-		(GBB.DBChar.DontFilterSaved == false or not GBB.SavedToDungeon(dungeon, isHeroic))
+function GBB.FilterDungeon(dungeon, isHeroic)
+	return dungeon and GBB.DBChar["FilterDungeon"..dungeon] and
+		(not GBB.HeroicList[dungeon] or ((not GBB.DBChar["HeroicOnly"] or isHeroic) and (not GBB.DBChar["NormalOnly"] or not isHeroic))) and
+		(not GBB.DBChar.FilterLevel or GBB.InLevelRange(dungeon, isHeroic)) and
+		(not GBB.DBChar.DontFilterSaved or not GBB.SavedToDungeon(dungeon, isHeroic))
 end
 
 function GBB.formatTime(sec) 
@@ -428,6 +426,7 @@ function GBB.Init()
 	-- Get localize and Dungeon-Information
 	GBB.L = GBB.LocalizationInit()	
 	GBB.dungeonNames = GBB.GetDungeonNames()
+	GBB.HeroicList = GBB.GetHeroics()
 	GBB.RaidList = GBB.GetRaids()
 	--GBB.dungeonLevel
 	GBB.dungeonSort = GBB.GetDungeonSort()	
