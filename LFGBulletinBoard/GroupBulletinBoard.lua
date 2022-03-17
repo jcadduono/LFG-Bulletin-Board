@@ -38,6 +38,7 @@ GBB.TBCDUNGEONBREAK = 57
 GBB.DUNGEONBREAK = 25
 GBB.COMBINEMSGTIMER=10
 GBB.MAXCOMPACTWIDTH=350
+GBB.SavedDungeons = {}
 
 -- Tools
 -------------------------------------------------------------------------------------
@@ -123,6 +124,10 @@ function GBB.LevelRange(dungeon,short)
 	return ""
 end
 
+function GBB.SavedToDungeon(dungeon, isHeroic)
+	return GBB.SavedDungeons[dungeon] and ((isHeroic and GBB.SavedDungeons[dungeon].heroic) or (not isHeroic and GBB.SavedDungeons[dungeon].normal))
+end
+
 function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	if dungeon == nil then return false end
 	if isHeroic == nil then isHeroic = false end
@@ -133,7 +138,8 @@ function GBB.FilterDungeon(dungeon, isHeroic, isRaid)
 	
 	return GBB.DBChar["FilterDungeon"..dungeon] and 
 		(isRaid or ((GBB.DBChar["HeroicOnly"] == false or isHeroic) and (GBB.DBChar["NormalOnly"] == false or isHeroic == false))) and
-		(GBB.DBChar.FilterLevel == false or inLevelRange)
+		(GBB.DBChar.FilterLevel == false or inLevelRange) and
+		(GBB.DBChar.DontFilterSaved == false or not GBB.SavedToDungeon(dungeon, isHeroic))
 end
 
 function GBB.formatTime(sec) 
@@ -574,7 +580,9 @@ function GBB.Init()
 	GBB.Tool.TabOnSelect(GroupBulletinBoardFrame,2,GBB.UpdateGroupList)
 	
 	GameTooltip:HookScript("OnTooltipSetUnit", hooked_createTooltip)
-		
+	
+	RequestRaidInfo()
+	
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
 end
 
@@ -697,12 +705,44 @@ local function Event_ADDON_LOADED(arg1)
 	)
 end
 
+local function Event_InstanceInfo()
+	local _, name, difficulty, locked, isHeroic, isRaid, dungeonList
+	
+	GBB.SavedDungeons = {}
+	for i = 1, GetNumSavedInstances() do
+		name, _, _, difficulty, locked, _, _, isRaid = GetSavedInstanceInfo(i)
+		if locked then
+			difficulty, _, isHeroic = GetDifficultyInfo(difficulty)
+			dungeonList = GBB.GetDungeons(name)
+			if type(dungeonList) == "table" then
+				name = next(dungeonList)
+				if name then
+					if not GBB.SavedDungeons[name] then
+						GBB.SavedDungeons[name] = {}
+					end
+					if isRaid then
+						GBB.SavedDungeons[name].heroic = true
+						GBB.SavedDungeons[name].normal = true
+					elseif isHeroic then
+						GBB.SavedDungeons[name].heroic = true
+					else
+						GBB.SavedDungeons[name].normal = true
+					end
+				end
+			end
+		end
+	end
+	
+	GBB.UpdateGroupList()
+end
+
 function GBB.OnLoad()	
 	GBB.Tool.RegisterEvent("ADDON_LOADED",Event_ADDON_LOADED)
 	GBB.Tool.RegisterEvent("CHAT_MSG_SYSTEM",Event_CHAT_MSG_SYSTEM)
 	GBB.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
 	GBB.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_GuildMessage)
 	GBB.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_GuildMessage)
+	GBB.Tool.RegisterEvent("UPDATE_INSTANCE_INFO",Event_InstanceInfo)
 	
 	for i,event in ipairs(PartyChangeEvent) do
 		GBB.Tool.RegisterEvent(event,GBB.UpdateGroupList)
