@@ -468,6 +468,7 @@ function GBB.GetDungeons(msg,name)
 	local isGood=false
 	local isHeroic=false
 
+	local hasraid=false
 	local runrequired=false
 	local hasrun=false
 	local runDungeon=""
@@ -483,6 +484,9 @@ function GBB.GetDungeons(msg,name)
 					break
 				elseif v~=nil then
 					dungeons[v]=true
+					if GBB.RaidList[v] then
+						hasraid=true
+					end
 				end
 			end
 		end
@@ -517,6 +521,9 @@ function GBB.GetDungeons(msg,name)
 				isGood=true
 			else
 				dungeons[x]=true
+				if GBB.RaidList[x] then
+					hasraid=true
+				end
 			end
 		end
 		wordcount = #(parts)
@@ -538,17 +545,23 @@ function GBB.GetDungeons(msg,name)
 			end
 		end
 	end
-		
+	
 	if dungeons["DEADMINES"] and not dungeons["DMW"] and not dungeons["DME"] and not dungeons["DME"] and name~=nil then
 		if nameLevel>0 and nameLevel<40 then
 			dungeons["DM"]=true
-			dungeons["DM2"]=false
+			dungeons["DM2"]=nil
 		else
-			dungeons["DM"]=false
+			dungeons["DM"]=nil
 			dungeons["DM2"]=true
 		end
 	end
-		
+	if hasraid and dungeons["MT"] then
+		dungeons["MT"]=nil -- looking for MT for X raid, do not filter as Mana Tombs
+	end
+	if dungeons["BT"] and (dungeons["ST"] or dungeons["BM"]) then
+		dungeons["BT"]=nil -- temple/black combined with sunken or morass should not filter Black Temple
+	end
+	
 	if isBad then
 		--dungeons={}
 	elseif isGood then 
