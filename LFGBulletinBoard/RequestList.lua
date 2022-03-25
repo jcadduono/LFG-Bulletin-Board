@@ -63,54 +63,50 @@ local function requestSort_nTOP_nTOTAL (a,b)
 	return false
 end
 
-local function CreateHeader(yy,dungeon)
-	local AnchorTop="GroupBulletinBoardFrame_ScrollChildFrame"
-	local AnchorRight="GroupBulletinBoardFrame_ScrollChildFrame"
-	local ItemFrameName="GBB.Dungeon_"..dungeon
-	
-	if GBB.FramesEntries[dungeon]==nil then
-		GBB.FramesEntries[dungeon]=CreateFrame("Frame",ItemFrameName , GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader")
-		GBB.FramesEntries[dungeon]:SetPoint("RIGHT", _G[AnchorRight], "RIGHT", 0, 0)						
-		_G[ItemFrameName.."_name"]:SetPoint("RIGHT",GBB.FramesEntries[dungeon], "RIGHT", 0,0)
-		local fname,h=_G[ItemFrameName.."_name"]:GetFont()
-		_G[ItemFrameName.."_name"]:SetHeight(h)
-		_G[ItemFrameName]:SetHeight(h+5)
-		_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)		
-		
+local function CreateHeader(yy, dungeon)
+	local ItemFrameName = "GBB.Dungeon_" .. dungeon
+	local HeaderString = _G[ItemFrameName .. "_name"]
+	local Text = "|r"
+
+	if not GBB.FramesEntries[dungeon] then
+		GBB.FramesEntries[dungeon] = CreateFrame("Frame", ItemFrameName, GroupBulletinBoardFrame_ScrollChildFrame, "GroupBulletinBoard_TmpHeader")
+		GBB.FramesEntries[dungeon]:SetPoint("RIGHT", GroupBulletinBoardFrame_ScrollChildFrame, "RIGHT", 0, 0)
+		HeaderString = _G[ItemFrameName .. "_name"]
+		HeaderString:SetPoint("RIGHT", GBB.FramesEntries[dungeon], "RIGHT", 0, 0)
+		local fname, h = HeaderString:GetFont()
+		HeaderString:SetHeight(h)
+		_G[ItemFrameName]:SetHeight(h + 5)
+		HeaderString:SetFontObject(GBB.DB.FontSize)
 	end
-	
-	local colTXT
-	if GBB.DB.ColorOnLevel then
-		if GBB.dungeonLevel[dungeon][1] ==0 then
-			colTXT="|r"
-		elseif GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
-			colTXT="|cFFAAAAAA"
+
+	if GBB.DB.ColorOnLevel and GBB.dungeonLevel[dungeon][1] > 0 then
+		if GBB.dungeonLevel[dungeon][2] < GBB.UserLevel then
+			Text = "|cFFAAAAAA"
 		elseif GBB.UserLevel<GBB.dungeonLevel[dungeon][1] then
-			colTXT="|cffff4040"
+			Text = "|cffff4040"
 		else
-			colTXT="|cff00ff00"							
+			Text = "|cff00ff00"
 		end
-	else
-		colTXT="|r"
-	end
-	
-	if LastDungeon~="" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
-		yy=yy+10
 	end
 
-	if GBB.FoldedDungeons[dungeon]==true then
-		colTXT=colTXT.."[+] "
-		lastIsFolded=true
-	else
-		lastIsFolded=false
+	if LastDungeon ~= "" and not (lastIsFolded and GBB.FoldedDungeons[dungeon]) then
+		yy = yy + 10
 	end
 
-	_G[ItemFrameName.."_name"]:SetText(colTXT..GBB.dungeonNames[dungeon].." |cFFAAAAAA"..GBB.LevelRange(dungeon).."|r")
-	_G[ItemFrameName.."_name"]:SetFontObject(GBB.DB.FontSize)				
-	GBB.FramesEntries[dungeon]:SetPoint("TOPLEFT",_G[AnchorTop], "TOPLEFT", 0,-yy)
+	if GBB.FoldedDungeons[dungeon] then
+		Text = Text .. "[+] "
+		lastIsFolded = true
+	else
+		lastIsFolded = false
+	end
+
+	Text = Text .. GBB.dungeonNames[dungeon] .." |cFFAAAAAA" .. GBB.LevelRange(dungeon) .. "|r"
+
+	HeaderString:SetText(Text)
+	GBB.FramesEntries[dungeon]:SetPoint("TOPLEFT", GroupBulletinBoardFrame_ScrollChildFrame, "TOPLEFT", 0, -yy)
 	GBB.FramesEntries[dungeon]:Show()
-	
-	yy=yy+_G[ItemFrameName]:GetHeight()
+
+	yy = yy + _G[ItemFrameName]:GetHeight()
 	LastDungeon = dungeon
 	return yy
 end
@@ -186,9 +182,6 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			suffix=" ("..GBB.RealLevel[req.name]..")"..suffix
 		end
 		
-		
-	
-	
 		local ti
 		if GBB.DB.ShowTotalTime then
 			ti=GBB.formatTime(time()-req.start)
@@ -196,16 +189,22 @@ local function CreateItem(yy,i,doCompact,req,forceHight)
 			ti=GBB.formatTime(time()-req.last)
 		end		
 	
-		local typePrefix
-		if req.IsHeroic == true then
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r,GBB.DB.HeroicDungeonColor.g,GBB.DB.HeroicDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["heroicAbr"] .. "]     "
-		elseif req.IsRaid == true then
-			typePrefix = "|c00ffff00" .. "[" .. GBB.L["raidAbr"] .. "]     "
+		local colorHex, abr
+		if req.IsHeroic then
+			colorHex = GBB.Tool.RGBPercToHex(GBB.DB.HeroicDungeonColor.r, GBB.DB.HeroicDungeonColor.g, GBB.DB.HeroicDungeonColor.b)
+			abr = GBB.L["heroicAbr"]
+		elseif req.IsRaid then
+			colorHex = "ffff00"
+			abr = GBB.L["raidAbr"]
 		else
-			local colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r,GBB.DB.NormalDungeonColor.g,GBB.DB.NormalDungeonColor.b)
-			typePrefix = "|c00".. colorHex .. "[" .. GBB.L["normalAbr"] .. "]    "
+			colorHex = GBB.Tool.RGBPercToHex(GBB.DB.NormalDungeonColor.r, GBB.DB.NormalDungeonColor.g, GBB.DB.NormalDungeonColor.b)
+			abr = GBB.L["normalAbr"]
 		end
+		local saved = ""
+		if GBB.SavedToDungeon(req.dungeon, req.IsHeroic) then
+			saved = "|cffff0000[" .. GBB.L["dungeonSaved"] .. "]"
+		end
+		local typePrefix = format("|cff%s[%s]|r%s  ", colorHex, abr, saved)
 
 		if GBB.DB.ChatStyle then
 			_G[ItemFrameName.."_name"]:SetText()					
